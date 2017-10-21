@@ -1,0 +1,30 @@
+buildscript {
+	repositories {
+    		jcenter()
+       	dependencies {
+        		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+      	}
+    }
+}
+
+apply from: "$rootDir/gradle/base.gradle"
+
+dependencies {
+    compile "org.jboss.weld.se:weld-se-core:$weldVersion"
+  	compile "org.jboss.weld.servlet:weld-servlet:$weldVersion"
+    compile "io.dropwizard:dropwizard-core:$dropwizardVersion"
+    compile "org.glassfish.jersey.containers.glassfish:jersey-gf-cdi:$jerseyGfCdiVersion"
+    compile "javax.transaction:javax.transaction-api:$jtaVersion"
+	testCompile "junit:junit:$junitVersion"
+}
+
+bintray {
+	pkg {
+        name = 'cdi-bundle'
+        desc = 'Dropwizard cdi bundle'
+        labels = ['dropwizard', 'cdi', 'bundle']
+        websiteUrl = 'https://github.com/mstoeckel/cdi-bundle'
+        issueTrackerUrl = 'https://github.com/mstoeckel/cdi-bundle/issues'
+        vcsUrl = 'https://github.com/mstoeckel/cdi-bundle.git'
+	}
+}

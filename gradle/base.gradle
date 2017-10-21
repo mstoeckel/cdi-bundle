@@ -1,0 +1,84 @@
+apply plugin: 'java'
+apply plugin: 'java-library'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+repositories {
+	mavenLocal()
+    	jcenter()
+	maven {
+		url "https://dl.bintray.com/cognodyne/maven"
+	}
+}
+
+def gitVersion = {
+    return "git describe --dirty".execute().in.text.toString().trim()
+}
+
+version=gitVersion()
+//version='0.1.4'
+
+eclipse {
+	classpath {
+		defaultOutputDir = file('.ecbuild')
+	}
+}
+
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+publishing {
+    repositories {
+		maven {
+                url "https://dl.bintray.com/cognodyne/maven"
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            if (plugins.hasPlugin('war')) {
+                from components.web
+            } else {
+                from components.java
+            }
+            
+            
+            artifact sourcesJar 
+            artifact javadocJar
+        }
+    }
+}
+
+bintray {
+	user = bintrayUser
+	key  = bintrayKey
+	publications = ['mavenJava']
+	dryRun = false
+	publish = true
+	override = true
+	pkg {
+		repo = 'maven'
+        userOrg = 'cognodyne'
+        licenses = ['Apache-2.0']
+        version {
+        		name = version
+        }
+	}
+}
+
+task(printVersion) {
+	doLast {
+		println "version=$version"
+	}
+}
