@@ -6,7 +6,7 @@ Add the following to the `build.gradle`
 
 ```
 repositories {
-	maven { url 'https://dl.bintray.com/cognodyne/maven' }
+	jcenter()
 }
 
 dependencies {
