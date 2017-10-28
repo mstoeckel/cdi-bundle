@@ -63,7 +63,7 @@ The above will perform the following:
 - Register all implementing classes of `io.dropwizard.lifecycle.Managed` interface to `io.dropwizard.setup.Environment.lifecycle().manage()`
 - Register all subclass of `io.dropwizard.servlets.tasks.Task` to the `io.dropwizard.setup.Environment.admin().addTask()`
 - Register all implementing classes of `javax.ws.rs.container.DynamicFeature` interface to `io.dropwizard.setup.Environment.jersey()`
-- Add all implementing classes of `javax.servlet.Filter` interface with with `javax.servlet.annotation.WebFilter` annotation to the `io.dropwizard.setup.Environment.servlets().addFilter()`
+- Add all implementing classes of `javax.servlet.Filter` interface with with `javax.servlet.annotation.WebFilter` annotation to the `io.dropwizard.setup.Environment.servlets().addFilter()`. Filters will be ordered according to the value of `javax.annotation.Priority`. If `javax.annotation.Priority` annotation is not present, the `java.lang.Integer.MAX_VALUE` will be assigned.
 - Add all implementing classes of `javax.servlet.Servlet` interface with with `javax.servlet.annotation.WebServlet` annotation to the `io.dropwizard.setup.Environment.servlets().addServlet()`
 - Register all classes with `javax.ws.rs.Path` annotation to the `io.dropwizard.setup.Environment.jersey()`
 
