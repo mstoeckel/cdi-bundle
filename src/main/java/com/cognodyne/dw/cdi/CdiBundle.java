@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.annotation.Priority;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -101,28 +102,34 @@ public class CdiBundle implements ConfiguredBundle<CdiConfigurable> {
             }
         });
         //register servlet filters
-        this.extension.getBeans().stream().filter(bean -> Filter.class.isAssignableFrom(bean.getBeanClass()) && CdiUtil.isAnnotationPresent(bean, WebFilter.class)).forEach(bean -> {
-            if (configuration.getCdiConfiguration() == null || configuration.getCdiConfiguration().include(bean.getBeanClass())) {
-                logger.info("registering servlet filter:{}...", bean.getBeanClass().getName());
-                WebFilter anno = CdiUtil.getAnnotation(bean, WebFilter.class);
-                javax.servlet.FilterRegistration.Dynamic filter = environment.servlets().addFilter(anno.filterName(), (Filter) CdiUtil.getReference(bm, bean));
-                if (anno.urlPatterns() != null && anno.urlPatterns().length != 0) {
-                    filter.addMappingForUrlPatterns(EnumSet.copyOf(Arrays.asList(anno.dispatcherTypes())), true, anno.urlPatterns());
-                } else if (anno.value() != null && anno.value().length != 0) {
-                    filter.addMappingForUrlPatterns(EnumSet.copyOf(Arrays.asList(anno.dispatcherTypes())), true, anno.value());
-                } else if (anno.servletNames() != null && anno.servletNames().length != 0) {
-                    filter.addMappingForUrlPatterns(EnumSet.copyOf(Arrays.asList(anno.dispatcherTypes())), true, anno.servletNames());
-                }
-                filter.setAsyncSupported(anno.asyncSupported());
-                if (anno.initParams() != null && anno.initParams().length != 0) {
-                    for (WebInitParam param : anno.initParams()) {
-                        filter.setInitParameter(param.name(), param.value());
+        this.extension.getBeans().stream()//
+                .filter(bean -> Filter.class.isAssignableFrom(bean.getBeanClass()) && CdiUtil.isAnnotationPresent(bean, WebFilter.class))//
+                .sorted((lo, ro) -> {
+                    int lhs = CdiUtil.isAnnotationPresent(lo, Priority.class) ? CdiUtil.getAnnotation(lo, Priority.class).value() : Integer.MAX_VALUE;
+                    int rhs = CdiUtil.isAnnotationPresent(ro, Priority.class) ? CdiUtil.getAnnotation(ro, Priority.class).value() : Integer.MAX_VALUE;
+                    return lhs - rhs;
+                }).forEach(bean -> {
+                    if (configuration.getCdiConfiguration() == null || configuration.getCdiConfiguration().include(bean.getBeanClass())) {
+                        logger.info("registering servlet filter:{}...", bean.getBeanClass().getName());
+                        WebFilter anno = CdiUtil.getAnnotation(bean, WebFilter.class);
+                        javax.servlet.FilterRegistration.Dynamic filter = environment.servlets().addFilter(anno.filterName(), (Filter) CdiUtil.getReference(bm, bean));
+                        if (anno.urlPatterns() != null && anno.urlPatterns().length != 0) {
+                            filter.addMappingForUrlPatterns(EnumSet.copyOf(Arrays.asList(anno.dispatcherTypes())), true, anno.urlPatterns());
+                        } else if (anno.value() != null && anno.value().length != 0) {
+                            filter.addMappingForUrlPatterns(EnumSet.copyOf(Arrays.asList(anno.dispatcherTypes())), true, anno.value());
+                        } else if (anno.servletNames() != null && anno.servletNames().length != 0) {
+                            filter.addMappingForUrlPatterns(EnumSet.copyOf(Arrays.asList(anno.dispatcherTypes())), true, anno.servletNames());
+                        }
+                        filter.setAsyncSupported(anno.asyncSupported());
+                        if (anno.initParams() != null && anno.initParams().length != 0) {
+                            for (WebInitParam param : anno.initParams()) {
+                                filter.setInitParameter(param.name(), param.value());
+                            }
+                        }
+                    } else {
+                        logger.info("not registering servlet filter:{} due to the configuartion", bean.getBeanClass().getName());
                     }
-                }
-            } else {
-                logger.info("not registering servlet filter:{} due to the configuartion", bean.getBeanClass().getName());
-            }
-        });
+                });
         //register servlets
         this.extension.getBeans().stream().filter(bean -> Servlet.class.isAssignableFrom(bean.getBeanClass()) && CdiUtil.isAnnotationPresent(bean, WebServlet.class)).forEach(bean -> {
             if (configuration.getCdiConfiguration() == null || configuration.getCdiConfiguration().include(bean.getBeanClass())) {
