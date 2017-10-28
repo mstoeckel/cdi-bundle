@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.health.HealthCheck;
-import com.cognodyne.dw.cdi.weld.DeployableWeldService;
+import com.cognodyne.dw.common.DeployableWeldService;
 
 import io.dropwizard.Application;
 import io.dropwizard.ConfiguredBundle;

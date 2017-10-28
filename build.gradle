@@ -10,11 +10,8 @@ buildscript {
 apply from: "$rootDir/gradle/base.gradle"
 
 dependencies {
-    compile "org.jboss.weld.se:weld-se-core:$weldVersion"
-  	compile "org.jboss.weld.servlet:weld-servlet:$weldVersion"
-    compile "io.dropwizard:dropwizard-core:$dropwizardVersion"
+	compile "com.cognodyne.dw:bundle-common:$bundleCommonVersion"
     compile "org.glassfish.jersey.containers.glassfish:jersey-gf-cdi:$jerseyGfCdiVersion"
-    compile "javax.transaction:javax.transaction-api:$jtaVersion"
 	testCompile "junit:junit:$junitVersion"
 }
 
