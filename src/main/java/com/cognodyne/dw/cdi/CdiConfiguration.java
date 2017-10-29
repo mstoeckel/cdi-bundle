@@ -1,9 +1,11 @@
 package com.cognodyne.dw.cdi;
 
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -11,10 +13,10 @@ import com.google.common.collect.ImmutableSet;
 
 @JsonDeserialize(builder = CdiConfiguration.Builder.class)
 public class CdiConfiguration {
-    private final Set<Pattern> includes;
-    private final Set<Pattern> excludes;
+    private final Set<PathMatcher> includes;
+    private final Set<PathMatcher> excludes;
 
-    private CdiConfiguration(Set<Pattern> includes, Set<Pattern> excludes) {
+    private CdiConfiguration(Set<PathMatcher> includes, Set<PathMatcher> excludes) {
         this.includes = includes;
         this.excludes = excludes;
     }
@@ -23,18 +25,18 @@ public class CdiConfiguration {
         return new Builder();
     }
 
-    public Set<Pattern> getIncludes() {
+    public Set<PathMatcher> getIncludes() {
         return includes;
     }
 
-    public Set<Pattern> getExcludes() {
+    public Set<PathMatcher> getExcludes() {
         return excludes;
     }
 
     boolean include(Class<?> cls) {
-        String name = cls.getName();
-        if (this.excludes.stream().anyMatch(p -> p.matcher(name).matches())) {
-            return this.includes.stream().anyMatch(p -> p.matcher(name).matches());
+        Path path = FileSystems.getDefault().getPath(cls.getName().replaceAll("\\.", "/"));
+        if (this.excludes.stream().anyMatch(p -> p.matches(path))) {
+            return this.includes.stream().anyMatch(p -> p.matches(path));
         }
         return true;
     }
@@ -49,10 +51,10 @@ public class CdiConfiguration {
         }
 
         public CdiConfiguration build() {
-            ImmutableSet.Builder<Pattern> includesBuilder = ImmutableSet.builder();
-            ImmutableSet.Builder<Pattern> excludesBuilder = ImmutableSet.builder();
-            this.includes.stream().forEach(str -> includesBuilder.add(Pattern.compile(str)));
-            this.excludes.stream().forEach(str -> excludesBuilder.add(Pattern.compile(str)));
+            ImmutableSet.Builder<PathMatcher> includesBuilder = ImmutableSet.builder();
+            ImmutableSet.Builder<PathMatcher> excludesBuilder = ImmutableSet.builder();
+            this.includes.stream().forEach(str -> includesBuilder.add(FileSystems.getDefault().getPathMatcher("glob:" + str)));
+            this.excludes.stream().forEach(str -> excludesBuilder.add(FileSystems.getDefault().getPathMatcher("glob:" + str)));
             return new CdiConfiguration(includesBuilder.build(), excludesBuilder.build());
         }
 

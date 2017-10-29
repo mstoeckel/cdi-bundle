@@ -72,14 +72,15 @@ The above default behavior can be altered with the appropriate configuration.
 ```
 cdi:
   includes:
-    - "com\.cognodyne\.cdi\..*"
+    - "com/cognodyne/cdi/**"
   excludes:
-    - "com\.cognodyne\..*"
-    - "com\.some\.other\..*"
+    - "com/cognodyne/**"
+    - "com/some/other/**"
 ```
 
-The above will exclude all fully qualified classes names matching one of the regular expressions from the `excludes` unless it also matches one of the regular expressions from the `includes`.
+The above will exclude all fully qualified class names (after converting all `.` with `/`) matching one of the glob expressions from the `excludes` unless it also matches one of the glob expressions from the `includes`.
 All classes are included unless excluded, and `includes` has higher precedent than `excudes`.
+See `java.nio.file.FileSystems.getPathMatcher()` for the glob expression syntax (very similar to the 'Ant style' path pattern expression).
 
 If any beans with `javax.inject.Singleton` or `javax.enterprise.context.ApplicationScoped` are also annotated with `com.cognodyne.dw.cdi.annotation.Startup`, then they will be started at the time of application startup.
 
