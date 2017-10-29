@@ -8,6 +8,7 @@ import javax.annotation.Priority;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.annotation.WebFilter;
@@ -37,6 +38,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import jersey.repackaged.com.google.common.collect.Lists;
 
+@Singleton
 public class CdiBundle implements ConfiguredBundle<CdiConfigurable> {
     private static final Logger logger = LoggerFactory.getLogger(CdiBundle.class);
     @Inject
@@ -61,6 +63,7 @@ public class CdiBundle implements ConfiguredBundle<CdiConfigurable> {
         });
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void run(CdiConfigurable configuration, Environment environment) throws Exception {
         logger.debug("running...", configuration);
@@ -112,7 +115,7 @@ public class CdiBundle implements ConfiguredBundle<CdiConfigurable> {
                     if (configuration.getCdiConfiguration() == null || configuration.getCdiConfiguration().include(bean.getBeanClass())) {
                         logger.info("registering servlet filter:{}...", bean.getBeanClass().getName());
                         WebFilter anno = CdiUtil.getAnnotation(bean, WebFilter.class);
-                        javax.servlet.FilterRegistration.Dynamic filter = environment.servlets().addFilter(anno.filterName(), (Filter) CdiUtil.getReference(bm, bean));
+                        javax.servlet.FilterRegistration.Dynamic filter = environment.servlets().addFilter(anno.filterName(),  (Class<Filter>)bean.getBeanClass());
                         if (anno.urlPatterns() != null && anno.urlPatterns().length != 0) {
                             filter.addMappingForUrlPatterns(EnumSet.copyOf(Arrays.asList(anno.dispatcherTypes())), true, anno.urlPatterns());
                         } else if (anno.value() != null && anno.value().length != 0) {
