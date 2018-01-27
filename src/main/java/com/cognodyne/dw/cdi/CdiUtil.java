@@ -2,6 +2,7 @@ package com.cognodyne.dw.cdi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -19,11 +20,15 @@ public class CdiUtil {
 
     public static boolean isAnnotationPresent(Set<Type> types, Class<? extends Annotation> annotationClass) {
         for (Type type : types) {
-            if (type instanceof Class<?>) {
-                Class<?> typeClass = (Class<?>) type;
-                if (typeClass.isAnnotationPresent(annotationClass)) {
-                    return true;
-                }
+            Class<?> typeClass = type.getClass();
+            if (type instanceof Class) {
+                typeClass = (Class<?>) type;
+            } else if (type instanceof ParameterizedType) {
+                ParameterizedType ptype = (ParameterizedType) type;
+                typeClass = (Class<?>) ptype.getRawType();
+            }
+            if (typeClass.isAnnotationPresent(annotationClass)) {
+                return true;
             }
         }
         return false;
@@ -35,11 +40,15 @@ public class CdiUtil {
 
     public static <T extends Annotation> T getAnnotation(Set<Type> types, Class<T> annotationClass) {
         for (Type type : types) {
-            if (type instanceof Class<?>) {
-                Class<?> typeClass = (Class<?>) type;
-                if (typeClass.isAnnotationPresent(annotationClass)) {
-                    return typeClass.getAnnotation(annotationClass);
-                }
+            Class<?> typeClass = type.getClass();
+            if (type instanceof Class) {
+                typeClass = (Class<?>) type;
+            } else if (type instanceof ParameterizedType) {
+                ParameterizedType ptype = (ParameterizedType) type;
+                typeClass = (Class<?>) ptype.getRawType();
+            }
+            if (typeClass.isAnnotationPresent(annotationClass)) {
+                return typeClass.getAnnotation(annotationClass);
             }
         }
         return null;
@@ -49,14 +58,18 @@ public class CdiUtil {
         Pattern pattern = Pattern.compile(methodNameRegEx);
         Set<Method> result = Sets.newHashSet();
         for (Type type : bean.getTypes()) {
-            if (type instanceof Class<?>) {
-                Class<?> typeClass = (Class<?>) type;
-                for (Method method : typeClass.getDeclaredMethods()) {
-                    if (pattern.matcher(method.getName()).matches()) {
-                        for (Class<? extends Annotation> anno : annotationClasses) {
-                            if (method.isAnnotationPresent(anno)) {
-                                result.add(method);
-                            }
+            Class<?> typeClass = type.getClass();
+            if (type instanceof Class) {
+                typeClass = (Class<?>) type;
+            } else if (type instanceof ParameterizedType) {
+                ParameterizedType ptype = (ParameterizedType) type;
+                typeClass = (Class<?>) ptype.getRawType();
+            }
+            for (Method method : typeClass.getDeclaredMethods()) {
+                if (pattern.matcher(method.getName()).matches()) {
+                    for (Class<? extends Annotation> anno : annotationClasses) {
+                        if (method.isAnnotationPresent(anno)) {
+                            result.add(method);
                         }
                     }
                 }
